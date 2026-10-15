@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      FRONTEND_ORIGINS: http://localhost:3001,http://127.0.0.1:3001
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - from urllib.request import urlopen; urlopen('http://127.0.0.1:8081/health', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8081
+    ports:
+      - "3001:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
